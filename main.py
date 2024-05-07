@@ -27,11 +27,18 @@ async def get_todos(username):
 
 @app.delete("/todos/<string:username>")
 async def delete_todo(username):
-    request = await quart.request.get_json(force=True)
-    todo_idx = request["todo_idx"]
-    if 0 <= todo_idx < len(_TODOS[username]):
-        _TODOS[username].pop(todo_idx)
+    _TODOS[username] = []
     return quart.Response(response="OK", status=200)
+
+
+@app.get("/")
+async def index():
+    html = [
+        "<h1>ChatGPT Plugin Example</h1>",
+        "<a href='/.well-known/ai-plugin.json'>/.well-known/ai-plugin.json</a>",
+        "<a href='/openapi.yaml'>/openapi.yaml</a>",
+    ]
+    return quart.Response("<br>".join(html), mimetype="text/html")
 
 
 @app.get("/logo.png")
@@ -42,15 +49,15 @@ async def plugin_logo():
 
 @app.get("/.well-known/ai-plugin.json")
 async def plugin_manifest():
-    host = request.headers["Host"]
-    text: str = generate_wellknown_config(host)
+    base = f"{request.scheme}://{request.headers['Host']}"
+    text: str = generate_wellknown_config(base)
     return quart.Response(text, mimetype="text/json")
 
 
 @app.get("/openapi.yaml")
 async def openapi_spec():
-    host = request.headers["Host"]
-    text: str = generate_openapi(host)
+    base = f"{request.scheme}://{request.headers['Host']}"
+    text: str = generate_openapi(base)
     return quart.Response(text, mimetype="text/yaml")
 
 
